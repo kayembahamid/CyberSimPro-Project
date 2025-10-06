@@ -1,0 +1,332 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  fullName      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  simulations      Simulation[]
+  scenarios        Scenario[]
+  certifications   Certification[]
+  trainingSessions TrainingSession[]
+  teamsCreated     Team[]           @relation("TeamCreator")
+  teamMemberships  TeamMember[]
+  subscription     Subscription?
+}
+
+model Simulation {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  scenarioId  String?
+  scenario    Scenario? @relation(fields: [scenarioId], references: [id])
+  type        String
+  status      String
+  score       Int?
+  completedAt DateTime?
+  createdAt   DateTime @default(now())
+  
+  @@index([userId])
+  @@index([scenarioId])
+}
+
+model Scenario {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  title       String
+  description String
+  difficulty  String
+  completed   Boolean  @default(false)
+  score       Int?
+  createdAt   DateTime @default(now())
+  
+  simulations Simulation[]
+  
+  @@index([userId])
+}
+
+model Certification {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  name        String
+  issueDate   DateTime
+  expiryDate  DateTime?
+  status      String
+  
+  @@index([userId])
+}
+
+model TrainingSession {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  moduleId        String
+  moduleName      String
+  status          String   // 'in_progress', 'completed', 'abandoned'
+  currentStep     Int      @default(0)
+  totalSteps      Int
+  score           Int?
+  timeSpent       Int      @default(0) // in seconds
+  completedAt     DateTime?
+  lastAccessedAt  DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  progress        TrainingProgress[]
+  
+  @@index([userId])
+  @@index([moduleId])
+  @@index([status])
+}
+
+model TrainingProgress {
+  id              String   @id @default(uuid())
+  sessionId       String
+  session         TrainingSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  stepIndex       Int
+  stepType        String   // 'question', 'scenario', 'info'
+  question        String?
+  userAnswer      String?
+  correctAnswer   String?
+  isCorrect       Boolean?
+  pointsEarned    Int      @default(0)
+  attempts        Int      @default(1)
+  timeSpent       Int      @default(0) // in seconds
+  completedAt     DateTime?
+  createdAt       DateTime @default(now())
+  
+  @@index([sessionId])
+  @@unique([sessionId, stepIndex])
+}
+
+model Team {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  avatarUrl   String?
+  createdBy   String
+  creator     User     @relation("TeamCreator", fields: [createdBy], references: [id])
+  totalPoints Int      @default(0)
+  memberCount Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  members     TeamMember[]
+  activities  TeamActivity[]
+  
+  @@index([totalPoints])
+  @@index([createdBy])
+}
+
+model TeamMember {
+  id        String   @id @default(uuid())
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String   @default("member") // 'admin', 'member'
+  points    Int      @default(0)
+  joinedAt  DateTime @default(now())
+  
+  @@unique([teamId, userId])
+  @@index([teamId])
+  @@index([userId])
+  @@index([points])
+}
+
+model TeamActivity {
+  id          String   @id @default(uuid())
+  teamId      String
+  team        Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId      String
+  activityType String  // 'training_completed', 'certificate_earned', 'joined', 'left'
+  description String
+  points      Int      @default(0)
+  metadata    String?  // JSON string for additional data
+  createdAt   DateTime @default(now())
+  
+  @@index([teamId])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model Competition {
+  id          String   @id @default(uuid())
+  title       String
+  description String
+  type        String   // 'weekly', 'monthly', 'custom'
+  startDate   DateTime
+  endDate     DateTime
+  status      String   @default("active") // 'active', 'completed', 'cancelled'
+  prizes      String?  // JSON string
+  createdAt   DateTime @default(now())
+  
+  entries     CompetitionEntry[]
+  
+  @@index([status])
+  @@index([startDate])
+  @@index([endDate])
+}
+
+model CompetitionEntry {
+  id            String   @id @default(uuid())
+  competitionId String
+  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  userId        String
+  teamId        String?
+  score         Int      @default(0)
+  rank          Int?
+  completedAt   DateTime?
+  createdAt     DateTime @default(now())
+  
+  @@unique([competitionId, userId])
+  @@index([competitionId])
+  @@index([userId])
+  @@index([score])
+}
+
+model Subscription {
+  id                String   @id @default(uuid())
+  userId            String   @unique
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeCustomerId  String   @unique
+  stripeSubscriptionId String? @unique
+  plan              String   // 'free', 'pro', 'enterprise'
+  status            String   // 'active', 'canceled', 'past_due', 'trialing'
+  currentPeriodStart DateTime?
+  currentPeriodEnd   DateTime?
+  cancelAtPeriodEnd Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  payments          Payment[]
+  
+  @@index([userId])
+  @@index([stripeCustomerId])
+  @@index([status])
+}
+
+model Payment {
+  id               String   @id @default(uuid())
+  subscriptionId   String
+  subscription     Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  stripePaymentId  String   @unique
+  amount           Int      // in cents
+  currency         String   @default("usd")
+  status           String   // 'succeeded', 'failed', 'pending'
+  description      String?
+  receiptUrl       String?
+  createdAt        DateTime @default(now())
+  
+  @@index([subscriptionId])
+  @@index([status])
+}
+
+model DemoRequest {
+  id            String   @id @default(uuid())
+  name          String
+  email         String
+  company       String
+  phone         String?
+  employeeCount String
+  status        String   @default("pending") // 'pending', 'scheduled', 'completed', 'cancelled'
+  notes         String?
+  scheduledAt   DateTime?
+  requestedAt   DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([status])
+  @@index([email])
+}
+
+model Organization {
+  id                String   @id @default(uuid())
+  name              String   @unique
+  domain            String?
+  employeeCount     Int      @default(0)
+  subscriptionPlan  String   @default("free") // 'free', 'professional', 'enterprise'
+  subscriptionStatus String  @default("trial") // 'trial', 'active', 'inactive', 'cancelled'
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  employees         Employee[]
+  campaigns         PhishingCampaign[]
+  
+  @@index([subscriptionStatus])
+}
+
+model Employee {
+  id             String   @id @default(uuid())
+  email          String   @unique
+  firstName      String
+  lastName       String
+  department     String?
+  position       String?
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  isActive       Boolean  @default(true)
+  lastTrainingAt DateTime?
+  totalScore     Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  campaignTargets PhishingTarget[]
+  
+  @@index([organizationId])
+  @@index([email])
+  @@index([department])
+}
+
+model PhishingCampaign {
+  id             String   @id @default(uuid())
+  name           String
+  description    String?
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  templateType   String   // 'suspicious-link', 'fake-invoice', 'password-reset', etc.
+  status         String   @default("draft") // 'draft', 'scheduled', 'active', 'completed', 'paused'
+  scheduledAt    DateTime?
+  startedAt      DateTime?
+  completedAt    DateTime?
+  totalTargets   Int      @default(0)
+  clickedCount   Int      @default(0)
+  reportedCount  Int      @default(0)
+  trainedCount   Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  
+  targets        PhishingTarget[]
+  
+  @@index([organizationId])
+  @@index([status])
+}
+
+model PhishingTarget {
+  id           String   @id @default(uuid())
+  campaignId   String
+  campaign     PhishingCampaign @relation(fields: [campaignId], references: [id], onDelete: Cascade)
+  employeeId   String
+  employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  emailSentAt  DateTime?
+  clickedAt    DateTime?
+  reportedAt   DateTime?
+  trainedAt    DateTime?
+  status       String   @default("pending") // 'pending', 'sent', 'clicked', 'reported', 'trained'
+  createdAt    DateTime @default(now())
+  
+  @@unique([campaignId, employeeId])
+  @@index([campaignId])
+  @@index([employeeId])
+  @@index([status])
+}

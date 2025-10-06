@@ -1,0 +1,24 @@
+{
+  "name": "@cybersim/database",
+  "version": "1.0.0",
+  "description": "Database layer for CyberSim Pro Platform",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "scripts": {
+    "generate": "prisma generate",
+    "migrate": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "push": "prisma db push",
+    "studio": "prisma studio",
+    "seed": "tsx seed.ts",
+    "format": "prisma format"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.8.0"
+  },
+  "devDependencies": {
+    "prisma": "^5.8.0",
+    "tsx": "^4.7.0",
+    "@types/node": "^20.10.0"
+  }
+}

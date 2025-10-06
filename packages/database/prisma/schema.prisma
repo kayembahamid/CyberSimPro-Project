@@ -1,0 +1,566 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// ENUMS
+// ==========================================
+
+enum UserRole {
+  TRAINEE
+  ANALYST
+  LEAD
+  ADMIN
+  SUPER_ADMIN
+  EMPLOYEE
+  COMPANY_ADMIN
+}
+
+enum Plan {
+  GROWTH
+  ENTERPRISE
+  REGULATED
+}
+
+enum SimulationStatus {
+  PENDING
+  QUEUED
+  RUNNING
+  COMPLETED
+  FAILED
+  STOPPED
+}
+
+enum CompetitionStatus {
+  UPCOMING
+  ACTIVE
+  COMPLETED
+  CANCELLED
+}
+
+enum CertificationStatus {
+  PENDING
+  ISSUED
+  REVOKED
+  EXPIRED
+}
+
+enum RecommendationStatus {
+  PENDING
+  ACCEPTED
+  COMPLETED
+  DISMISSED
+}
+
+// ==========================================
+// USERS & ORGANIZATIONS
+// ==========================================
+
+model User {
+  id             String        @id @default(uuid())
+  email          String        @unique
+  name           String?
+  avatarUrl      String?
+  role           UserRole      @default(TRAINEE)
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  
+  // Relationships
+  simulations    Simulation[]
+  teamMemberships TeamMember[]
+  certifications  UserCertification[]
+  recommendations TrainingRecommendation[]
+  complianceReports ComplianceReport[]
+  trainingProgress TrainingProgress[]
+  
+  // Metadata
+  skillLevel     Json?         // Computed skill profile: { defense: 75, forensics: 60, ... }
+  totalScore     Int           @default(0)
+  simulationsCompleted Int    @default(0)
+  lastActiveAt   DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([email])
+  @@index([organizationId])
+  @@index([role])
+  @@index([totalScore])
+  @@map("users")
+}
+
+model Organization {
+  id              String   @id @default(uuid())
+  name            String
+  slug            String   @unique
+  plan            Plan     @default(GROWTH)
+  industry        String?  // financial, healthcare, technology, government, energy
+  
+  // Relationships
+  users           User[]
+  teams           Team[]
+  
+  // Billing
+  stripeCustomerId String?  @unique
+  subscriptionId   String?  @unique
+  currentPeriodEnd DateTime?
+  trialEndsAt      DateTime?
+  
+  // Usage tracking & quotas
+  simulationsThisMonth Int @default(0)
+  simulationsQuota     Int @default(100) // Based on plan
+  storageUsedGB        Float @default(0)
+  storageQuotaGB       Float @default(10) // Based on plan
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([plan])
+  @@index([slug])
+  @@map("organizations")
+}
+
+// ==========================================
+// TEAMS & COLLABORATION
+// ==========================================
+
+model Team {
+  id             String       @id @default(uuid())
+  name           String
+  description    String?      @db.Text
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  
+  // Relationships
+  members        TeamMember[]
+  competitions   CompetitionTeam[]
+  
+  // Stats
+  totalScore     Int          @default(0)
+  globalRank     Int?
+  orgRank        Int?
+  
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  @@index([organizationId])
+  @@index([totalScore])
+  @@map("teams")
+}
+
+model TeamMember {
+  id        String   @id @default(uuid())
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      String   @default("member") // leader, member
+  score     Int      @default(0)
+  joinedAt  DateTime @default(now())
+
+  @@unique([teamId, userId])
+  @@index([teamId])
+  @@index([userId])
+  @@index([score])
+  @@map("team_members")
+}
+
+model Competition {
+  id          String              @id @default(uuid())
+  name        String
+  description String?             @db.Text
+  scenarioId  String
+  scenario    Scenario            @relation(fields: [scenarioId], references: [id])
+  
+  mode        String              // red_vs_blue, cooperative, race, ctf, solo_challenge
+  status      CompetitionStatus   @default(UPCOMING)
+  
+  // Participating teams
+  teams       CompetitionTeam[]
+  
+  // Time window
+  startAt     DateTime
+  endAt       DateTime
+  
+  // Leaderboard data
+  leaderboard Json?               // Cached leaderboard with rankings
+  
+  // Prizes/rewards
+  rewards     Json?               // { first: "...", second: "...", third: "..." }
+  
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  @@index([status])
+  @@index([startAt])
+  @@index([scenarioId])
+  @@map("competitions")
+}
+
+model CompetitionTeam {
+  id            String      @id @default(uuid())
+  competitionId String
+  competition   Competition @relation(fields: [competitionId], references: [id], onDelete: Cascade)
+  teamId        String
+  team          Team        @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  
+  score         Int         @default(0)
+  rank          Int?
+  completedAt   DateTime?
+  
+  // Performance metrics
+  metrics       Json?       // { accuracy: 0.95, speed: 120, detections: 45, ... }
+  
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([competitionId, teamId])
+  @@index([competitionId])
+  @@index([teamId])
+  @@index([score])
+  @@map("competition_teams")
+}
+
+// ==========================================
+// SCENARIOS
+// ==========================================
+
+model Scenario {
+  id                String       @id @default(uuid())
+  name              String
+  description       String       @db.Text
+  type              String       // phishing, ransomware, ddos, data_breach, insider_threat, apt
+  difficulty        String       // beginner, intermediate, advanced, expert
+  adversaryProfile  String?      // apt29, fin7, apt28, lazarus, etc.
+  environment       String       // corporate, cloud, iot, scada, hybrid
+  sector            String?      // financial, healthcare, energy, government, technology
+  focusCves         String[]     // CVE IDs to emphasize
+  mitreTactics      String[]     // MITRE ATT&CK tactics
+  mitreTechniques   String[]     // MITRE ATT&CK techniques
+  estimatedDuration Int          // minutes
+  
+  // Relationships
+  simulations       Simulation[]
+  competitions      Competition[]
+  
+  // Learning objectives
+  objectives        Json?        // Array of learning objectives
+  prerequisites     String[]     // Scenario IDs that should be completed first
+  
+  // Content
+  brief             String?      @db.Text
+  detailedStory     String?      @db.Text
+  hints             Json?        // Array of hints
+  
+  // Metadata
+  isActive          Boolean      @default(true)
+  isPublished       Boolean      @default(false)
+  popularity        Int          @default(0) // How many times used
+  avgScore          Float?       // Average user score
+  avgDuration       Int?         // Average completion time in minutes
+  
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  @@index([type])
+  @@index([difficulty])
+  @@index([isActive])
+  @@index([isPublished])
+  @@index([popularity])
+  @@map("scenarios")
+}
+
+// ==========================================
+// SIMULATIONS
+// ==========================================
+
+model Simulation {
+  id           String            @id @default(uuid())
+  userId       String
+  user         User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  scenarioId   String
+  scenario     Scenario          @relation(fields: [scenarioId], references: [id])
+  
+  status       SimulationStatus  @default(PENDING)
+  progress     Int               @default(0) // 0-100
+  
+  // Results
+  score        Int?
+  maxScore     Int               @default(100)
+  accuracy     Float?            // 0.0-1.0
+  results      Json?             // Detailed results from MCP
+  feedback     String?           @db.Text
+  
+  // Telemetry
+  telemetry    TelemetryEvent[]
+  
+  // MCP Integration
+  mcpSimId     String?           // Link to MCP simulation ID
+  jobId        String?           // Bull queue job ID
+  
+  // Performance metrics
+  detectionRate   Float?         // Percentage of attacks detected
+  responseTime    Int?           // Average response time in seconds
+  falsePositives  Int            @default(0)
+  falseNegatives  Int            @default(0)
+  
+  // Error handling
+  errorMessage String?           @db.Text
+  retryCount   Int               @default(0)
+  
+  // Timestamps
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+  startedAt    DateTime?
+  completedAt  DateTime?
+
+  @@index([userId])
+  @@index([scenarioId])
+  @@index([status])
+  @@index([createdAt(sort: Desc)])
+  @@index([score])
+  @@map("simulations")
+}
+
+model TelemetryEvent {
+  id           BigInt     @id @default(autoincrement())
+  simulationId String
+  simulation   Simulation @relation(fields: [simulationId], references: [id], onDelete: Cascade)
+  
+  eventType    String     // technique_executed, detection_triggered, alert_fired, response_action
+  severity     String?    // critical, high, medium, low, info
+  technique    String?    // MITRE ATT&CK technique ID (T1566, T1059, etc.)
+  phase        String?    // reconnaissance, initial_access, execution, persistence, etc.
+  
+  // Event details
+  title        String?
+  description  String?    @db.Text
+  
+  timestamp    DateTime   @default(now())
+  data         Json       // Full event payload
+
+  @@index([simulationId, timestamp(sort: Desc)])
+  @@index([eventType])
+  @@index([severity])
+  @@index([technique])
+  @@map("telemetry_events")
+}
+
+// ==========================================
+// AI RECOMMENDATIONS
+// ==========================================
+
+model TrainingRecommendation {
+  id          String                 @id @default(uuid())
+  userId      String
+  user        User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  scenarioId  String
+  title       String
+  reasoning   String                 @db.Text // AI-generated explanation
+  priority    String                 // critical, high, medium, low
+  skillGaps   String[]               // Areas to improve
+  
+  // Metadata
+  confidence  Float?                 // 0.0-1.0 confidence score from AI
+  aiModel     String?                // claude-3-sonnet, etc.
+  
+  status      RecommendationStatus   @default(PENDING)
+  
+  // Completion tracking
+  acceptedAt  DateTime?
+  completedAt DateTime?
+  dismissedAt DateTime?
+  
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([priority])
+  @@index([createdAt(sort: Desc)])
+  @@map("training_recommendations")
+}
+
+// ==========================================
+// CERTIFICATIONS
+// ==========================================
+
+model Certification {
+  id               String              @id @default(uuid())
+  name             String
+  description      String              @db.Text
+  level            String              // bronze, silver, gold, platinum
+  
+  // Requirements
+  requiredScenarios String[]           // Scenario IDs required
+  requiredScore    Int                 // Minimum average score
+  requiredCompletions Int              @default(1) // How many times scenarios must be completed
+  
+  // Visual assets
+  badgeUrl         String?
+  certificateTemplate String?          @db.Text
+  
+  userCertifications UserCertification[]
+  
+  isActive         Boolean             @default(true)
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+
+  @@index([level])
+  @@index([isActive])
+  @@map("certifications")
+}
+
+model UserCertification {
+  id              String              @id @default(uuid())
+  userId          String
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  certificationId String
+  certification   Certification       @relation(fields: [certificationId], references: [id])
+  
+  // Verification
+  verificationCode String             @unique
+  verificationUrl  String
+  
+  // Status
+  status          CertificationStatus @default(PENDING)
+  score           Int?
+  
+  // LinkedIn sharing
+  linkedinShared  Boolean             @default(false)
+  shareCount      Int                 @default(0)
+  
+  // Timestamps
+  issuedAt        DateTime?
+  expiresAt       DateTime?
+  revokedAt       DateTime?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  @@unique([userId, certificationId])
+  @@index([userId])
+  @@index([status])
+  @@index([verificationCode])
+  @@map("user_certifications")
+}
+
+// ==========================================
+// COMPLIANCE
+// ==========================================
+
+model ComplianceReport {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  title           String
+  framework       String   // soc2, iso27001, nist_csf, pci_dss, cmmc, fedramp
+  reportType      String   // audit, readiness, gap_analysis, validation
+  
+  // Report content
+  summary         String   @db.Text
+  findings        Json     // Array of findings
+  controls        Json     // Array of controls assessed
+  gaps            Json?    // Array of gaps identified
+  recommendations Json?    // Array of recommendations
+  
+  // Coverage metrics
+  coverageScore   Float?   // 0.0-1.0
+  controlsCovered Int      @default(0)
+  controlsTotal   Int      @default(0)
+  
+  // Export formats
+  pdfUrl          String?
+  jsonData        Json?
+  
+  // Signatures/attestation
+  attestedBy      String?
+  attestedAt      DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@index([framework])
+  @@index([reportType])
+  @@index([createdAt(sort: Desc)])
+  @@map("compliance_reports")
+}
+
+// ==========================================
+// TRAINING MODULES (BANZAI-STYLE)
+// ==========================================
+
+model TrainingProgress {
+  id            String   @id @default(uuid())
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  moduleId      String   // phishing-detective, password-guardian, etc.
+  stepId        String   // pd-1, pd-2, etc.
+  
+  completed     Boolean  @default(false)
+  score         Int      @default(0)
+  attempts      Int      @default(0)
+  timeSpent     Int      @default(0) // seconds
+  
+  completedAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([userId, moduleId, stepId])
+  @@index([userId])
+  @@index([moduleId])
+  @@index([completed])
+  @@map("training_progress")
+}
+
+model CompanyTrainingReport {
+  id                String   @id @default(uuid())
+  organizationId    String
+  
+  totalEmployees    Int
+  completedCount    Int
+  inProgressCount   Int
+  notStartedCount   Int
+  
+  averageScore      Float
+  goldBadges        Int      @default(0)
+  silverBadges      Int      @default(0)
+  bronzeBadges      Int      @default(0)
+  
+  moduleStats       Json?    // Per-module completion stats
+  departmentStats   Json?    // Per-department stats
+  
+  generatedAt       DateTime @default(now())
+  createdAt         DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([generatedAt(sort: Desc)])
+  @@map("company_training_reports")
+}
+
+// ==========================================
+// ACTIVITY LOG
+// ==========================================
+
+model ActivityLog {
+  id          BigInt   @id @default(autoincrement())
+  userId      String?
+  action      String   // user_login, simulation_started, scenario_completed, etc.
+  resource    String?  // simulations, scenarios, teams, etc.
+  resourceId  String?
+  metadata    Json?
+  ipAddress   String?
+  userAgent   String?  @db.Text
+  timestamp   DateTime @default(now())
+
+  @@index([userId, timestamp(sort: Desc)])
+  @@index([action])
+  @@index([timestamp(sort: Desc)])
+  @@map("activity_logs")
+}

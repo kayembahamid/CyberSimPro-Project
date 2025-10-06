@@ -1,0 +1,520 @@
+{
+  "modules": [
+    {
+      "id": "phishing-detective",
+      "title": "Phishing Detective",
+      "duration": 5,
+      "totalPoints": 100,
+      "description": "Track down cybercriminals by identifying phishing attempts",
+      "icon": "🕵️",
+      "steps": [
+        {
+          "id": "pd-1",
+          "type": "story",
+          "content": "Welcome Detective! The city's been hit with a wave of phishing attacks. Your mission: identify the fake emails before they steal data.",
+          "image": "/images/detective-office.svg",
+          "nextButton": "Accept Mission"
+        },
+        {
+          "id": "pd-2",
+          "type": "character_intro",
+          "character": "Chief Inspector",
+          "dialogue": "We've intercepted 4 suspicious emails. Each one could be legitimate or a phishing attempt. Your job is to identify which ones are fake.",
+          "image": "/images/chief.svg",
+          "options": [
+            { "text": "I'm ready!", "next": "pd-3" },
+            { "text": "Show me an example first", "next": "pd-helper" }
+          ]
+        },
+        {
+          "id": "pd-3",
+          "type": "email_scenario",
+          "email": {
+            "from": "IT Support <itsupport@companye.com>",
+            "subject": "⚠️ Urgent: Password Expiring Today",
+            "body": "Your password will expire in 2 hours. Click here to reset it immediately or lose access to your account.",
+            "hasLink": true,
+            "linkUrl": "http://companye.com/reset"
+          },
+          "question": "Is this email legitimate?",
+          "options": [
+            { 
+              "text": "Yes - Reset my password", 
+              "correct": false, 
+              "points": 0,
+              "feedback": "WRONG! Look at the domain - 'companye.com' not 'company.com'. This is a phishing attempt!"
+            },
+            { 
+              "text": "No - It's phishing", 
+              "correct": true, 
+              "points": 25,
+              "feedback": "CORRECT! You spotted the fake domain. Real IT uses 'company.com' not 'companye.com'."
+            },
+            { 
+              "text": "Check with IT first", 
+              "correct": true, 
+              "points": 15,
+              "feedback": "GOOD! When in doubt, always verify directly with IT."
+            },
+            { 
+              "text": "Delete without reading", 
+              "correct": false, 
+              "points": 5,
+              "feedback": "Not ideal - you should learn to identify threats, not just delete everything."
+            }
+          ],
+          "explanation": "Phishers often use urgency and slight misspellings in domains to trick you."
+        },
+        {
+          "id": "pd-4",
+          "type": "email_scenario",
+          "email": {
+            "from": "Amazon Security <security@amazon.com>",
+            "subject": "Your Order #78234 Has Been Placed",
+            "body": "Thank you for your order of $2,847. If you didn't make this purchase, click here immediately.",
+            "hasLink": true
+          },
+          "helper": {
+            "name": "Security Bot",
+            "tip": "Check if you actually ordered anything. Scammers use fear to make you click!"
+          },
+          "question": "What should you do?",
+          "options": [
+            { 
+              "text": "Click the link - I didn't order this!", 
+              "correct": false,
+              "points": 0,
+              "feedback": "STOP! Never click links when panicked. Go to Amazon.com directly."
+            },
+            { 
+              "text": "Go to Amazon.com directly", 
+              "correct": true,
+              "points": 25,
+              "feedback": "PERFECT! Always go to the website directly, never through email links."
+            },
+            { 
+              "text": "Reply to the email", 
+              "correct": false,
+              "points": 0,
+              "feedback": "No! This confirms your email is active to scammers."
+            },
+            { 
+              "text": "Call Amazon support", 
+              "correct": true,
+              "points": 20,
+              "feedback": "Good choice! Calling directly is a safe way to verify."
+            }
+          ],
+          "explanation": "Always verify suspicious orders through the official website or customer service."
+        },
+        {
+          "id": "pd-5",
+          "type": "email_scenario",
+          "email": {
+            "from": "CEO John Smith <john.smith@company-secure.com>",
+            "subject": "URGENT: Wire Transfer Needed",
+            "body": "I'm in a meeting with a client. Please wire $50,000 to this account immediately. Don't reply - just do it!",
+            "hasLink": false
+          },
+          "question": "What's suspicious about this email?",
+          "options": [
+            { 
+              "text": "Nothing - the CEO needs help", 
+              "correct": false,
+              "points": 0,
+              "feedback": "DANGER! This is CEO fraud. Always verify large financial requests."
+            },
+            { 
+              "text": "The email domain is wrong", 
+              "correct": true,
+              "points": 25,
+              "feedback": "EXCELLENT! 'company-secure.com' isn't your company's domain. This is fraud!"
+            },
+            { 
+              "text": "The urgency is suspicious", 
+              "correct": true,
+              "points": 20,
+              "feedback": "CORRECT! Legitimate requests don't demand immediate action without verification."
+            },
+            { 
+              "text": "Wire the money quickly", 
+              "correct": false,
+              "points": 0,
+              "feedback": "NEVER wire money based on email alone! This loses millions for companies."
+            }
+          ],
+          "explanation": "CEO fraud scams cost companies billions. Always verify through a phone call."
+        },
+        {
+          "id": "pd-6",
+          "type": "completion",
+          "content": "Congratulations Detective! You've identified the phishing attempts and kept the city safe.",
+          "scoremessage": "You earned {{score}} out of 100 Cyber Points!",
+          "badge_earned": "Phishing Hunter"
+        }
+      ]
+    },
+    {
+      "id": "password-guardian",
+      "title": "Password Guardian",
+      "duration": 5,
+      "totalPoints": 100,
+      "description": "Defend against password attacks like a cyber knight",
+      "icon": "🛡️",
+      "steps": [
+        {
+          "id": "pg-1",
+          "type": "story",
+          "content": "The Kingdom of Cyberspace is under attack! Hackers are trying to break into accounts using weak passwords. You must defend the realm!",
+          "image": "/images/cyber-kingdom.svg",
+          "nextButton": "Defend the Kingdom!"
+        },
+        {
+          "id": "pg-2",
+          "type": "question",
+          "question": "Which password is STRONGEST?",
+          "options": [
+            { 
+              "text": "Password123!", 
+              "correct": false,
+              "points": 0,
+              "feedback": "Too common! This is in every hacker's dictionary."
+            },
+            { 
+              "text": "MyD0g$nam3!sMax", 
+              "correct": true,
+              "points": 25,
+              "feedback": "EXCELLENT! Mix of cases, numbers, symbols, and length makes this strong."
+            },
+            { 
+              "text": "qwerty", 
+              "correct": false,
+              "points": 0,
+              "feedback": "Terrible! This is one of the most common password patterns."
+            },
+            { 
+              "text": "12345678", 
+              "correct": false,
+              "points": 0,
+              "feedback": "Never use sequential numbers! Cracked in seconds."
+            }
+          ],
+          "explanation": "Strong passwords use: uppercase, lowercase, numbers, symbols, and are 12+ characters long."
+        },
+        {
+          "id": "pg-3",
+          "type": "scenario",
+          "title": "Password Manager Setup",
+          "content": "Your friend says: 'I use the same password everywhere so I don't forget it.'",
+          "question": "What advice do you give?",
+          "options": [
+            { 
+              "text": "That's smart - consistency is key", 
+              "correct": false,
+              "points": 0,
+              "feedback": "NO! If one site is hacked, ALL accounts are compromised!"
+            },
+            { 
+              "text": "Use a password manager instead", 
+              "correct": true,
+              "points": 25,
+              "feedback": "PERFECT! Password managers create and store unique passwords safely."
+            },
+            { 
+              "text": "Write passwords in a notebook", 
+              "correct": false,
+              "points": 10,
+              "feedback": "Better than reusing, but physical notebooks can be lost or stolen."
+            },
+            { 
+              "text": "Just use your birthday", 
+              "correct": false,
+              "points": 0,
+              "feedback": "NEVER! Personal info is easy for hackers to find."
+            }
+          ],
+          "explanation": "Password managers like LastPass, 1Password, or Bitwarden are essential for security."
+        },
+        {
+          "id": "pg-4",
+          "type": "question",
+          "question": "You get an email: 'Your password has expired. Click here to reset it.' What do you do?",
+          "options": [
+            { 
+              "text": "Click the link immediately", 
+              "correct": false,
+              "points": 0,
+              "feedback": "STOP! This could be phishing. Never click email links for password resets."
+            },
+            { 
+              "text": "Go to the website directly", 
+              "correct": true,
+              "points": 25,
+              "feedback": "PERFECT! Always navigate to sites directly, not through emails."
+            },
+            { 
+              "text": "Reply with current password", 
+              "correct": false,
+              "points": 0,
+              "feedback": "NEVER share your password via email! Huge security risk."
+            },
+            { 
+              "text": "Ignore it completely", 
+              "correct": false,
+              "points": 10,
+              "feedback": "Better than clicking, but verify through the official site to be sure."
+            }
+          ],
+          "explanation": "Password reset phishing is extremely common. Always use the official website."
+        },
+        {
+          "id": "pg-5",
+          "type": "question",
+          "question": "How often should you change your passwords?",
+          "options": [
+            { 
+              "text": "Every week", 
+              "correct": false,
+              "points": 0,
+              "feedback": "Too frequent! This leads to weak, predictable passwords."
+            },
+            { 
+              "text": "Only when there's a breach", 
+              "correct": true,
+              "points": 25,
+              "feedback": "CORRECT! Modern security says change only when compromised or annually."
+            },
+            { 
+              "text": "Never change them", 
+              "correct": false,
+              "points": 0,
+              "feedback": "Some periodic changes are good, especially for critical accounts."
+            },
+            { 
+              "text": "Every day", 
+              "correct": false,
+              "points": 0,
+              "feedback": "Impractical! Focus on strong, unique passwords instead."
+            }
+          ],
+          "explanation": "Old advice said change frequently, but experts now say strong unique passwords are better."
+        },
+        {
+          "id": "pg-6",
+          "type": "completion",
+          "content": "Victory! You've defended the Kingdom with your password knowledge!",
+          "score_message": "You earned {{score}} Cyber Points!",
+          "badge_earned": "Password Master"
+        }
+      ]
+    },
+    {
+      "id": "malware-defender",
+      "title": "Malware Defender",
+      "duration": 5,
+      "totalPoints": 100,
+      "description": "Spot and stop malware before it infects your system",
+      "icon": "🦠",
+      "steps": [
+        {
+          "id": "md-1",
+          "type": "story",
+          "content": "A virus outbreak is spreading through the internet! Your computer is the last line of defense. Can you spot the infected files before they take over?",
+          "image": "/images/virus-alert.svg",
+          "nextButton": "Start Defense"
+        },
+        {
+          "id": "md-2",
+          "type": "question",
+          "question": "You download a file called 'invoice.pdf.exe'. What's wrong?",
+          "options": [
+            { 
+              "text": "Nothing - it's just a PDF", 
+              "correct": false,
+              "points": 0,
+              "feedback": "DANGER! The .exe extension means it's a program, not a PDF!"
+            },
+            { 
+              "text": "The double extension is suspicious", 
+              "correct": true,
+              "points": 25,
+              "feedback": "CORRECT! .exe files can contain malware. Real PDFs end in .pdf only."
+            },
+            { 
+              "text": "Open it to check", 
+              "correct": false,
+              "points": 0,
+              "feedback": "NEVER open suspicious files! This could infect your computer."
+            },
+            { 
+              "text": "Scan it with antivirus first", 
+              "correct": true,
+              "points": 20,
+              "feedback": "SMART! Always scan downloads with antivirus before opening."
+            }
+          ],
+          "explanation": "Malware often uses double extensions to trick you. invoice.pdf.exe is a program, not a document!"
+        },
+        {
+          "id": "md-3",
+          "type": "question",
+          "question": "A pop-up says: 'Your computer is infected! Call this number immediately!' What do you do?",
+          "options": [
+            { 
+              "text": "Call the number right away", 
+              "correct": false,
+              "points": 0,
+              "feedback": "SCAM! This is fake tech support. Never call numbers from pop-ups."
+            },
+            { 
+              "text": "Close the pop-up and run real antivirus", 
+              "correct": true,
+              "points": 25,
+              "feedback": "PERFECT! Use your installed antivirus, not random pop-ups."
+            },
+            { 
+              "text": "Click the pop-up to fix it", 
+              "correct": false,
+              "points": 0,
+              "feedback": "NO! Clicking installs real malware. Close your browser instead."
+            },
+            { 
+              "text": "Pay the fee to remove virus", 
+              "correct": false,
+              "points": 0,
+              "feedback": "SCAM! Legitimate antivirus doesn't demand immediate payment via pop-up."
+            }
+          ],
+          "explanation": "Fake virus pop-ups are scareware designed to make you panic and pay money."
+        },
+        {
+          "id": "md-4",
+          "type": "completion",
+          "content": "System secured! You've stopped the malware outbreak!",
+          "score_message": "Defense score: {{score}} points!",
+          "badge_earned": "Malware Hunter"
+        }
+      ]
+    },
+    {
+      "id": "social-engineer-spotter",
+      "title": "Social Engineering Spotter",
+      "duration": 5,
+      "totalPoints": 100,
+      "description": "Identify manipulation tactics used by cybercriminals",
+      "icon": "🎭",
+      "steps": [
+        {
+          "id": "se-1",
+          "type": "story",
+          "content": "Master manipulators are using psychology to trick people into giving up secrets. Your mission: spot their tactics before they succeed.",
+          "image": "/images/manipulator.svg",
+          "nextButton": "Begin Training"
+        },
+        {
+          "id": "se-2",
+          "type": "question",
+          "question": "Someone calls claiming to be from IT: 'I need your password to fix a problem.' What do you do?",
+          "options": [
+            { 
+              "text": "Give them the password", 
+              "correct": false,
+              "points": 0,
+              "feedback": "NEVER! Real IT never asks for passwords. This is social engineering."
+            },
+            { 
+              "text": "Hang up and call IT directly", 
+              "correct": true,
+              "points": 25,
+              "feedback": "PERFECT! Always verify by calling official numbers yourself."
+            },
+            { 
+              "text": "Ask them to prove their identity", 
+              "correct": false,
+              "points": 10,
+              "feedback": "Better, but they'll just lie. Hang up and verify independently."
+            },
+            { 
+              "text": "Give them a fake password", 
+              "correct": false,
+              "points": 5,
+              "feedback": "Don't engage with scammers. Just hang up and report it."
+            }
+          ],
+          "explanation": "Social engineers impersonate authority figures. Always verify through official channels."
+        },
+        {
+          "id": "se-3",
+          "type": "question",
+          "question": "You find a USB drive in the parking lot. What do you do?",
+          "options": [
+            { 
+              "text": "Plug it in to see what's on it", 
+              "correct": false,
+              "points": 0,
+              "feedback": "DANGER! USB drops are a common attack vector. Could contain malware."
+            },
+            { 
+              "text": "Report it to security without plugging it in", 
+              "correct": true,
+              "points": 25,
+              "feedback": "EXCELLENT! USB drop attacks are real. Never plug in unknown drives."
+            },
+            { 
+              "text": "Take it home", 
+              "correct": false,
+              "points": 0,
+              "feedback": "NO! This could infect your personal computer too."
+            },
+            { 
+              "text": "Throw it away", 
+              "correct": false,
+              "points": 10,
+              "feedback": "Better than using it, but report it so security can investigate."
+            }
+          ],
+          "explanation": "Attackers intentionally drop infected USB drives hoping someone will plug them in."
+        },
+        {
+          "id": "se-4",
+          "type": "question",
+          "question": "Your 'boss' emails urgently: 'Buy 10 gift cards, scratch off codes, send photos of the codes to me.' What do you do?",
+          "options": [
+            { 
+              "text": "Buy them immediately - it's urgent!", 
+              "correct": false,
+              "points": 0,
+              "feedback": "SCAM! Real bosses never ask for gift cards. This is fraud."
+            },
+            { 
+              "text": "Verify with your boss directly", 
+              "correct": true,
+              "points": 25,
+              "feedback": "CORRECT! Gift card scams are extremely common. Always verify."
+            },
+            { 
+              "text": "Reply asking why", 
+              "correct": false,
+              "points": 5,
+              "feedback": "Don't engage with the scammer. Verify through another channel."
+            },
+            { 
+              "text": "Ask for a different payment method", 
+              "correct": false,
+              "points": 0,
+              "feedback": "NO! The entire request is fake. Don't try to help."
+            }
+          ],
+          "explanation": "Gift card scams have cost millions. Legitimate businesses never request gift cards."
+        },
+        {
+          "id": "se-5",
+          "type": "completion",
+          "content": "Mission accomplished! You've mastered social engineering defense!",
+          "score_message": "Final score: {{score}} points!",
+          "badge_earned": "Social Engineer Defender"
+        }
+      ]
+    }
+  ]
+}

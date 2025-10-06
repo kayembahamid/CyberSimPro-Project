@@ -1,0 +1,49 @@
+{
+  "name": "cybersim-pro-platform",
+  "version": "1.0.0",
+  "private": true,
+  "packageManager": "npm@10.9.0",
+  "description": "Complete CyberSim Pro SaaS Platform - Monorepo",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "dev:marketing": "cd apps/marketing && npm run dev",
+    "dev:dashboard": "cd apps/dashboard && npm run dev",
+    "dev:api": "cd apps/api && npm run dev",
+    "dev:mcp": "cd packages/mcp-server && npm run dev",
+    "build": "turbo run build",
+    "build:marketing": "cd apps/marketing && npm run build",
+    "build:dashboard": "cd apps/dashboard && npm run build",
+    "build:api": "cd apps/api && npm run build",
+    "lint": "turbo run lint",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "db:generate": "cd packages/database && npx prisma generate",
+    "db:migrate": "cd packages/database && npx prisma migrate dev",
+    "db:push": "cd packages/database && npx prisma db push",
+    "db:seed": "cd packages/database && tsx seed.ts",
+    "db:studio": "cd packages/database && npx prisma studio",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "prettier": "^3.1.0",
+    "tsx": "^4.7.0",
+    "turbo": "^2.0.0",
+    "typescript": "^5.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "author": "CyberSim Pro Team",
+  "license": "MIT",
+  "dependencies": {
+    "@supabase/auth-helpers-nextjs": "^0.10.0",
+    "@supabase/supabase-js": "^2.58.0"
+  }
+}
