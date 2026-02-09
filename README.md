@@ -5,11 +5,11 @@ Enterprise cybersecurity training platform with gamified learning modules, phish
 ##  Overview
 
 CyberSim Pro is a comprehensive cybersecurity training platform designed for organizations to train employees on cybersecurity best practices through:
-- 🎮 Gamified training modules (Banzai-style interactive learning)
-- 🛡️ Phishing simulation campaigns
-- 📊 Analytics & reporting dashboard  
-- 🏢 Enterprise admin panel
-- 💳 Stripe payment integration
+- Gamified training modules (Banzai-style interactive learning)
+- Phishing simulation campaigns
+- Analytics & reporting dashboard  
+- Enterprise admin panel
+- Stripe payment integration
 
 ## Tech Stack
 
