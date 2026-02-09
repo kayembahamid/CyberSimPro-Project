@@ -2,7 +2,7 @@
 
 Enterprise cybersecurity training platform with gamified learning modules, phishing simulations, and comprehensive analytics.
 
-## 🚀 Overview
+##  Overview
 
 CyberSim Pro is a comprehensive cybersecurity training platform designed for organizations to train employees on cybersecurity best practices through:
 - 🎮 Gamified training modules (Banzai-style interactive learning)
@@ -11,7 +11,7 @@ CyberSim Pro is a comprehensive cybersecurity training platform designed for org
 - 🏢 Enterprise admin panel
 - 💳 Stripe payment integration
 
-## 📦 Tech Stack
+## Tech Stack
 
 - **Frontend**: Next.js 14, React, TypeScript, Tailwind CSS
 - **Backend**: Express.js, Node.js, TypeScript
@@ -20,7 +20,7 @@ CyberSim Pro is a comprehensive cybersecurity training platform designed for org
 - **Payments**: Stripe
 - **Monorepo**: Turborepo
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 CyberSimPro-Project/
@@ -34,7 +34,7 @@ CyberSimPro-Project/
 └── docs/                   # Documentation
 ```
 
-## 🛠️ Setup Instructions
+## Setup Instructions
 
 ### Prerequisites
 - Node.js 18+
@@ -99,7 +99,7 @@ cd apps/marketing-nextjs && npm run dev
 - 🔌 API: http://localhost:3000
 - ❤️ Health Check: http://localhost:3000/health
 
-## ✨ Features
+## Features
 
 ### Training Modules
 - **Phishing Detection 101** - 15 min, 8 steps, 65 points
@@ -119,7 +119,7 @@ cd apps/marketing-nextjs && npm run dev
 - **Enterprise**: $149/month - Up to 500 employees
 - **Regulated**: Custom pricing - Unlimited employees + compliance features
 
-## 🔧 Development
+## Development
 
 ### Available Scripts
 
@@ -147,7 +147,7 @@ POST /api/auth/login
 GET /api/auth/me
 ```
 
-## 🚢 Deployment
+## Deployment
 
 ### Recommended Stack
 - **Frontend**: Vercel
@@ -164,14 +164,14 @@ Ensure these are set in production:
 - `STRIPE_WEBHOOK_SECRET` - Stripe webhook secret
 - `SMTP_*` - Email service credentials (optional)
 
-## 📚 Documentation
+## Documentation
 
 - [API Documentation](docs/API_DOCUMENTATION.md)
 - [Deployment Guide](docs/DEPLOYMENT_GUIDE.md)
 - [User Guide](docs/USER_GUIDE.md)
 - [Detailed README](README_DETAILED.md)
 
-## 🧪 Testing
+## Testing
 
 ```bash
 # Run API tests
@@ -182,7 +182,7 @@ npm test
 npm test -- --coverage
 ```
 
-## 📝 License
+## License
 
 Private - All rights reserved
 
